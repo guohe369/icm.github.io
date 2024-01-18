@@ -1,57 +1,423 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>In-Context Matting: Automatic Alpha Matte Estimation</title>
-<!-- Style and scripts remain the same as the provided template -->
+
+
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+
+  <!--
+  <script src="./resources/jsapi" type="text/javascript"></script>
+  <script type="text/javascript" async>google.load("jquery", "1.3.2");</script>
+ -->
+
 <style type="text/css">
-    /* CSS styles from the provided template */
+  @font-face {
+   font-family: 'Avenir Book';
+   src: url("./fonts/Avenir_Book.ttf"); /* File to be stored at your site */
+   }
+
+  body {
+    font-family: "Avenir Book", "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight:300;
+    font-size:14px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 800px;
+  }
+  h1 {
+    font-weight:300;
+  }
+  h2 {
+    font-weight:300;
+  }
+
+  p {
+    font-weight:300;
+    line-height: 1.4;
+  }
+
+  code {
+    font-size: 0.8rem;
+    margin: 0 0.2rem;
+    padding: 0.5rem 0.8rem;
+    white-space: nowrap;
+    background: #efefef;
+    border: 1px solid #d3d3d3;
+    color: #000000;
+    border-radius: 3px;
+  }
+
+  pre > code {
+    display: block;
+    white-space: pre;
+    line-height: 1.5;
+    padding: 0;
+    margin: 0;
+  }
+
+  pre.prettyprint > code {
+    border: none;
+  }
+
+
+  .container {
+        display: flex;
+        align-items: center;
+        justify-content: center
+  }
+  .image {
+        flex-basis: 40%
+  }
+  .text {
+        padding-left: 20px;
+        padding-right: 20px;
+  }
+
+  .disclaimerbox {
+    background-color: #eee;
+    border: 1px solid #eeeeee;
+    border-radius: 10px ;
+    -moz-border-radius: 10px ;
+    -webkit-border-radius: 10px ;
+    padding: 20px;
+  }
+
+  video.header-vid {
+    height: 140px;
+    border: 1px solid black;
+    border-radius: 10px ;
+    -moz-border-radius: 10px ;
+    -webkit-border-radius: 10px ;
+  }
+
+  img.header-img {
+    height: 140px;
+    border: 1px solid black;
+    border-radius: 10px ;
+    -moz-border-radius: 10px ;
+    -webkit-border-radius: 10px ;
+  }
+
+  img.rounded {
+    border: 0px solid #eeeeee;
+    border-radius: 10px ;
+    -moz-border-radius: 10px ;
+    -webkit-border-radius: 10px ;
+
+  }
+
+  a:link,a:visited
+  {
+    color: #1367a7;
+    text-decoration: none;
+  }
+  a:hover {
+    color: #208799;
+  }
+
+  td.dl-link {
+    height: 160px;
+    text-align: center;
+    font-size: 22px;
+  }
+
+  .layered-paper-big { /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
+    box-shadow:
+            0px 0px 1px 1px rgba(0,0,0,0.35), /* The top layer shadow */
+            5px 5px 0 0px #fff, /* The second layer */
+            5px 5px 1px 1px rgba(0,0,0,0.35), /* The second layer shadow */
+            10px 10px 0 0px #fff, /* The third layer */
+            10px 10px 1px 1px rgba(0,0,0,0.35), /* The third layer shadow */
+            15px 15px 0 0px #fff, /* The fourth layer */
+            15px 15px 1px 1px rgba(0,0,0,0.35), /* The fourth layer shadow */
+            20px 20px 0 0px #fff, /* The fifth layer */
+            20px 20px 1px 1px rgba(0,0,0,0.35), /* The fifth layer shadow */
+            25px 25px 0 0px #fff, /* The fifth layer */
+            25px 25px 1px 1px rgba(0,0,0,0.35); /* The fifth layer shadow */
+    margin-left: 10px;
+    margin-right: 45px;
+  }
+
+
+  .layered-paper { /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
+    box-shadow:
+            0px 0px 1px 1px rgba(0,0,0,0.35), /* The top layer shadow */
+            5px 5px 0 0px #fff, /* The second layer */
+            5px 5px 1px 1px rgba(0,0,0,0.35), /* The second layer shadow */
+            10px 10px 0 0px #fff, /* The third layer */
+            10px 10px 1px 1px rgba(0,0,0,0.35); /* The third layer shadow */
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-right: 30px;
+    margin-bottom: 5px;
+  }
+
+  .vert-cent {
+    position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+  }
+
+  hr
+  {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+  }
 </style>
+
+	<title>In-Context Matting</title>
 </head>
 
-<body>
-    <br>
-    <center>
-        <span style="font-size:36px">In-Context Matting: Automatic Alpha Matte Estimation</span><br><br><br>
-    </center>
-
-    <table align="center" width="800px">
-        <tbody>
-            <!-- Authors and affiliations, following the format of the provided template -->
-        </tbody>
-    </table>
-    <br>
-
-    <table align="center" width="700px">
-        <tbody>
-            <tr>
-                <!-- Resources like Code, Paper, Cite with links -->
-            </tr>
-        </tbody>
-    </table>
+<body data-new-gr-c-s-check-loaded="14.1093.0" data-gr-ext-installed="">
+	<br>
+	<center>
+	<span style="font-size:36px">In-Context Matting</span><br><br><br>
+	</center>
+	<table align="center" width="800px">
+            <tbody><tr>
+                    <td align="center" width="160px">
+              <center>
+                <span style="font-size:16px">He Guo</a><sup>1</sup></span>
+                </center>
+                </td>
+                    <td align="center" width="160px">
+              <center>
+                <span style="font-size:16px">Zixuan Ye<sup>1</sup></span>
+                </center>
+              </td>
+                    <td align="center" width="160px">
+             <center>
+               <span style="font-size:16px">Zhiguo Cao<sup>1</sup></span>
+               </center>
+             </td>
+                  <td align="center" width="160px">
+              <center>
+                <span style="font-size:16px">Hao Lu<sup>1</sup></span>
+                </center>
+              </td>
+                   </tr>
+       </tbody></table><br>
     
-    <br><hr><br>
-
-    <center>
-        <img src="./resources/main_image_of_in_context_matting.jpg" alt="Main Image of In-Context Matting" style="width: 100%; object-fit: cover; max-width:100%;">
-    </center>
-    <p style="text-align:justify; text-justify:inter-ideograph;">
-        <!-- Brief introduction to In-Context Matting -->
-    </p>
-
-    <center><h2> Abstract </h2></center>
-    <p style="text-align:justify; text-justify:inter-ideograph;">
-        <!-- Abstract of In-Context Matting -->
-    </p>
     
-    <!-- Additional sections for Experiments, Results, etc., following the format of the provided template -->
+	
+	  <table align="center" width="700px">
+            <tbody><tr>
+                    <td align="center" width="50px">
+              <center>
+                    <span style="font-size:16px"></span>
+                </center>
+                </td>
+                    <td align="center" width="300px">
+              <center>
+                    <span style="font-size:16px"><sup>1</sup>Huazhong University of Science and Technology</span>
+                </center>
+                </td>
+                    
+        </tr></tbody></table>
+	
+	<table align="center" width="700px">
+            <tbody><tr>
+              <td align="center" width="200px">
+                <center>
+                  <br>
+                  <span style="font-size:20px">Code
+                    <a href="https://github.com/"> [GitHub]</a>
+                  </span>
+                </center>
+              </td>
 
-    <br>
-    <hr>
-    <center> <h2> Acknowledgements </h2> </center>
-    <p> 
-        <!-- Acknowledgements specific to In-Context Matting -->
-    </p>
-    <br>
-</body>
-</html>
+              <td align="center" width="200px">
+                <center>
+                  <br>
+                  <span style="font-size:20px">
+                    Paper <a href="https://arxiv.org/abs/"> [arXiv]</a>
+                  </span>
+                </center>
+              </td>
+
+              <td align="center" width="200px">
+                <center>
+                  <br>
+                  <span style="font-size:20px">
+                    Cite <a href="./resources/noen"> [BibTeX]</a>
+                  </span>
+                </center>
+              </td>
+            </tr></tbody>
+      </table>
+	
+      <br><hr>
+      <br>         
+      
+      <center>
+          <img src="./resources/fig1.pdf" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+        </center>
+        <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+            In-context matting enables automatic natural image matting of target images of a certain object category conditioned on a reference image of the same category, with user-provided priors such as masks and scribbles on the reference image only. Notice that, our approach exhibits remarkable cross-domain matting quality.
+      </left></p>
+        <br> 
+
+      <center><h2> Abstract </h2> </center>
+      <p style="text-align:justify; text-justify:inter-ideograph;">
+      </p><div class="container">
+        <div class="text" width="400px"> 
+          <p style="text-align:justify; text-justify:inter-ideograph;">
+            <left>
+                Current deep networks are very data-hungry and benefit from training on large-scale datasets, which are often time-consuming to collect and annotate. By contrast, synthetic data can be generated infinitely using generative models such as DALL-E and diffusion models, with minimal effort and cost. In this paper, we present DatasetDM, a generic dataset generation model that can produce diverse synthetic images and the corresponding high-quality perception annotations (e.g., segmentation masks, and depth). Our method builds upon the pre-trained diffusion model and extends text-guided image synthesis to perception data generation. We show that the rich latent code of the diffusion model can be effectively decoded as accurate perception annotations using a decoder module. Training the decoder only needs less than 1% (around 100 images) manually labeled images, enabling the generation of an infinitely large annotated dataset. Then these synthetic data can be used for training various perception models for downstream tasks. To showcase the power of the proposed approach, we generate datasets with rich dense pixel-wise labels for a wide range of downstream tasks, including semantic segmentation, instance segmentation, and depth estimation. Notably, it achieves 1) state-of-the-art results on semantic segmentation and instance segmentation; 2) significantly more robust on domain generalization than using the real data alone; and state-of-the-art results in zero-shot segmentation setting; and 3) flexibility for efficient application and novel task composition (e.g., image editing).
+          </left></p>
+        </div>
+      </div>
+      <br>
+      
+      <center><h2>Synthetic Data from DatasetDM (supported six task, include long-tail segmentation)</h2></center>
+      <center>
+          <img src="./resources/1691760445080.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+        </center>
+      
+<!--      <div class="container">-->
+<!--        <div class="image" width="300px">-->
+<!--          <center><p><img class="center" src="./resources/1691760445080.jpg" width="300px"></p></center>-->
+<!--        </div>-->
+<!--        <div class="text" width="250px">-->
+<!--          <p> A ‘good’ mask annotation satisfy two conditions:-->
+<!--          1) class-discriminative. 2) high-resolution, precise mask.-->
+<!--          -->
+<!--          The average map shows the possibility for us to use for semantic segmentation,-->
+<!--          where it is class-discriminative and fine-grained.-->
+<!--          </p>-->
+<!--        </div>-->
+<!--      </div>-->
+      
+<!--      <p><img class="center" src="./resources/fig7.png" width="800px"></p>-->
+          
+          
+      <hr>
+      
+      <br>
+      <center> <h2> How to do it (pipeline) </h2> </center>
+      <p><img class="left" src="./resources/1691760597135.jpg" width="800px"></p>
+      <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+          DatasetDM consists of two main steps: 1) Training. Using diffusion inversion to extract the latent code from a small amount of data (around hundreds of pictures) and then train the perception decoder. 2) Text-guided data generation. A large language model such as GPT-4 is utilized to prompt infinite and diverse data generation for various downstream tasks.
+         </left></p>
+      
+      <br>
+      <center> <h2> Perception Decoder </h2> </center>
+      <p><img class="left" src="./resources/1691760753673.jpg" width="800px"></p>
+      <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+          The proposed decoder is a generalized architecture for the six supported tasks, with only minor variations required for different downstream applications, i.e., determining whether to activate certain layers.
+         </left></p>
+      
+      <br>
+      <center> <h2> Prompting Text-Guided Data Generation </h2> </center>
+      <p><img class="left" src="./resources/1691760893860.jpg" width="800px"></p>
+      <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+          We guide GPT-4 to produce diverse, and infinite prompts. For different downstream tasks and datasets, we give different guided prompts for GPT-4. For example, as for the urban scene of Cityscapes, the simple guided prompt is like `Please provide 100 language descriptions of urban driving scenes for the Cityscapes benchmark, containing a minimum of 15 words each. These descriptions will serve as a guide for Stable Diffusion in generating images.` In this approach, we collected L text prompts, which average around 100 prompts for each dataset.
+         </left></p>
+      
+      <br>
+      <hr>
+      <center><h2>Experiment-1: Instance segmentation on COCO val2017</h2></center>
+      <p><b>Quantitative result for Instance segmentation on COCO val2017 </b> </p>
+
+      <p><img class="center" src="./resources/1691761060277.jpg" width="800px"></p>
+
+      
+
+      <center><h2>Experiment-2: Semantic segmentation on VOC 2012</h2></center>
+      <p><b>Comparison with the previous methods. </b> </p>
+      <div class="container">
+        <div class="image" width="200px">
+          <center><p><img class="center" src="./resources/1691761142866.jpg" width="500px"></p></center>
+        </div>
+        <div class="text" width="250px"> 
+          <p> ‘R: ’ refers to the number of real data used to train.
+          </p>
+        </div>
+      </div>
+      
+      <center><h2>Experiment-3: Semantic segmentation on Cityscapes</h2></center>
+      <div class="container">
+        <div class="image" width="400px">
+          <center><p><img class="center" src="./resources/1691761292905.jpg" width="500px"></p></center>
+        </div>
+      </div>
+
+      <center><h2>Experiment-4: Human Pose Estimation on COCO val2017</h2></center>
+      <div class="container">
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/1691761382370.jpg" width="800px"></p></center>
+        </div>
+        </div>
+      </div>
+      
+      <center><h2>Experiment-5: Semantic segmentation on DeepFashion-MM</h2></center>
+      <div class="container">
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/1691761463051.jpg" width="800px"></p></center>
+        </div>
+        </div>
+      </div>
+      
+      <center><h2>Experiment-6: Depth Estimation on NYU Depth V2 val dataset</h2></center>
+      <div class="container">
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/1691761510546.jpg" width="800px"></p></center>
+        </div>
+        </div>
+      </div>
+      
+      <center><h2>Experiment-7: Zero-Shot Semantic Segmentation on PASCAL VOC 2012</h2></center>
+      <div class="container">
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/1691761556765.jpg" width="800px"></p></center>
+        </div>
+        </div>
+      </div>
+      
+      <center><h2>Experiment-8: Performance for Domain Generalization between different datasets.</h2></center>
+      <div class="container">
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/1691761606825.jpg" width="800px"></p></center>
+        </div>
+        </div>
+      </div>
+      
+      
+      
+      <center>
+          <img src="./resources/1691761637859.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+        </center>
+        <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+            Examples of Human-Centric Generated Data for DatasetDM. Our method is capable
+            of generating high-accuracy, high-diversity, and unified perceptual annotations.
+        </left></p>
+        <br>
+        
+        <center>
+            <img src="./resources/1691761737174.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+          </center>
+          <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+              Examples of Generated Data for Urban City Scenario from DatasetDM.
+          </left></p>
+          <br>
+          
+          <center>
+              <img src="./resources/1691761781948.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+            </center>
+            <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+                Prompts of diffusion model from GPT-4. By providing some simple cues, GPT-4 can
+                generate a vast and diverse array of prompts.
+            </left></p>
+            <br>
+            
+      <br>
+      <hr>
+      <center> <h2> Acknowledgements </h2> </center>
+      <p> 
+	      Based on a template by <a href="https://lipurple.github.io/">
+              Ziyi Li</a> and <a href="http://richzhang.github.io/">Richard Zhang</a>.
+      </p>
+      <br>
+<br>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
