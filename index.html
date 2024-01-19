@@ -300,7 +300,7 @@ Quantitative and qualitative results on the ICM-57 testing set show that Diffusi
       
       <br>
       <center> <h2> How to do it (pipeline) </h2> </center>
-      <p><img class="left" src="./resources/1691760597135.jpg" width="800px"></p>
+      <p><img class="left" src="./resources/pipeline.png" width="800px"></p>
       <p style="text-align:justify; text-justify:inter-ideograph;"><left>
           DiffusionMatte integrates a Stable Diffusion-derived feature extractor, an in-context similarity module, and a matting head. It processes a target image, a reference image, and an RoI map. Features of both reference and target images, and self-attention maps of the target image, are extracted and used. The in-context similarity utilizes the in-context query from the reference image to create a guidance map, which, combined with self-attention maps, assists in locating the target object. The matting head then generates the alpha matte for the target object.
          </left></p>
