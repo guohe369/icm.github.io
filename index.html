@@ -262,17 +262,23 @@
         <div class="text" width="400px"> 
           <p style="text-align:justify; text-justify:inter-ideograph;">
             <left>
-                Current deep networks are very data-hungry and benefit from training on large-scale datasets, which are often time-consuming to collect and annotate. By contrast, synthetic data can be generated infinitely using generative models such as DALL-E and diffusion models, with minimal effort and cost. In this paper, we present DatasetDM, a generic dataset generation model that can produce diverse synthetic images and the corresponding high-quality perception annotations (e.g., segmentation masks, and depth). Our method builds upon the pre-trained diffusion model and extends text-guided image synthesis to perception data generation. We show that the rich latent code of the diffusion model can be effectively decoded as accurate perception annotations using a decoder module. Training the decoder only needs less than 1% (around 100 images) manually labeled images, enabling the generation of an infinitely large annotated dataset. Then these synthetic data can be used for training various perception models for downstream tasks. To showcase the power of the proposed approach, we generate datasets with rich dense pixel-wise labels for a wide range of downstream tasks, including semantic segmentation, instance segmentation, and depth estimation. Notably, it achieves 1) state-of-the-art results on semantic segmentation and instance segmentation; 2) significantly more robust on domain generalization than using the real data alone; and state-of-the-art results in zero-shot segmentation setting; and 3) flexibility for efficient application and novel task composition (e.g., image editing).
+                We introduce in-context matting, a novel task setting of image matting. Given a reference image of a certain foreground and guided priors such as points, scribbles, and masks, in-context matting enables automatic alpha estimation on a batch of target images of the same foreground category, without additional auxiliary input. 
+This setting marries good performance in auxiliary input-based matting and ease of use in automatic matting, which finds a good trade-off between customization and automation. 
+To overcome the key challenge of accurate foreground matching, we introduce DiffusionMatte, an in-context matting model built upon a pre-trained text-to-image diffusion model. Conditioned on inter- and intra-similarity matching, DiffusionMatte can make full use of reference context to generate accurate target alpha mattes. To benchmark the task, we also introduce a novel testing dataset ICM-57, covering 57 groups of real-world images.
+Quantitative and qualitative results on the ICM-57 testing set show that DiffusionMatte rivals the accuracy of trimap-based matting while retaining the automation level akin to automatic matting.
           </left></p>
         </div>
       </div>
       <br>
       
-      <center><h2>Synthetic Data from DatasetDM (supported six task, include long-tail segmentation)</h2></center>
+      <center><h2>Comparison between in-context matting and the existing image matting paradigms</h2></center>
       <center>
-          <img src="./resources/1691760445080.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+          <img src="./resources/paradigm_compare.png" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
         </center>
-      
+             
+        <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+           "Aux" and "Auto" are abbreviations for automatic matting and auxiliary input-based matting, respectively. In-context matting uniquely requires only a single reference input to achieve the automation of automatic matting and the generalizability of auxiliary input-based matting.
+      </left></p>
 <!--      <div class="container">-->
 <!--        <div class="image" width="300px">-->
 <!--          <center><p><img class="center" src="./resources/1691760445080.jpg" width="300px"></p></center>-->
@@ -296,116 +302,81 @@
       <center> <h2> How to do it (pipeline) </h2> </center>
       <p><img class="left" src="./resources/1691760597135.jpg" width="800px"></p>
       <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-          DatasetDM consists of two main steps: 1) Training. Using diffusion inversion to extract the latent code from a small amount of data (around hundreds of pictures) and then train the perception decoder. 2) Text-guided data generation. A large language model such as GPT-4 is utilized to prompt infinite and diverse data generation for various downstream tasks.
+          DiffusionMatte integrates a Stable Diffusion-derived feature extractor, an in-context similarity module, and a matting head. It processes a target image, a reference image, and an RoI map. Features of both reference and target images, and self-attention maps of the target image, are extracted and used. The in-context similarity utilizes the in-context query from the reference image to create a guidance map, which, combined with self-attention maps, assists in locating the target object. The matting head then generates the alpha matte for the target object.
          </left></p>
       
       <br>
-      <center> <h2> Perception Decoder </h2> </center>
-      <p><img class="left" src="./resources/1691760753673.jpg" width="800px"></p>
+      <center> <h2> In-Context Similarity </h2> </center>
+      <p><img class="left" src="./resources/similarity.png" width="800px"></p>
       <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-          The proposed decoder is a generalized architecture for the six supported tasks, with only minor variations required for different downstream applications, i.e., determining whether to activate certain layers.
+          Illustration of the inter- and intra-similarity modules. For simplicity, the resize operation is omitted, only the calculation of one element of the in-context query is depicted, and the fusion process of self-attention maps from a single scale is shown. The inter-similarity computes the similarity between features extracted from the target image and the in-context query derived from the reference image, generating an average similarity map. The intra-similarity combines the self-attention maps representing intra-image similarities within the target image with the similarity map obtained from the inter-similarity module.
          </left></p>
       
       <br>
-      <center> <h2> Prompting Text-Guided Data Generation </h2> </center>
-      <p><img class="left" src="./resources/1691760893860.jpg" width="800px"></p>
+      <center> <h2> Test dataset: ICM-57 </h2> </center>
+      <p><img class="left" src="./resources/dataset.png" width="800px"></p>
       <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-          We guide GPT-4 to produce diverse, and infinite prompts. For different downstream tasks and datasets, we give different guided prompts for GPT-4. For example, as for the urban scene of Cityscapes, the simple guided prompt is like `Please provide 100 language descriptions of urban driving scenes for the Cityscapes benchmark, containing a minimum of 15 words each. These descriptions will serve as a guide for Stable Diffusion in generating images.` In this approach, we collected L text prompts, which average around 100 prompts for each dataset.
+          To assess the performance of our model, we constructed the first testing dataset for in-context matting, named ICM-57, which comprises 57 image groups that form various real-world  contexts. Our test set ICM-$57$ encompasses foregrounds of the same category and same instance, fulfilling the essence of in-context matting.
          </left></p>
       
       <br>
       <hr>
-      <center><h2>Experiment-1: Instance segmentation on COCO val2017</h2></center>
-      <p><b>Quantitative result for Instance segmentation on COCO val2017 </b> </p>
+      <center><h2>Experiment-1: Comparison with in-context segmentation models</h2></center>
+      <p><b>Comparison with in-context segmentation models </b> </p>
 
-      <p><img class="center" src="./resources/1691761060277.jpg" width="800px"></p>
+      <p><img class="center" src="./resources/seg.png" width="800px"></p>
 
       
 
-      <center><h2>Experiment-2: Semantic segmentation on VOC 2012</h2></center>
-      <p><b>Comparison with the previous methods. </b> </p>
+
+       <center><h2>Experiment-2: Comparison with automatic and auxiliary input-based matting models</h2></center>
       <div class="container">
-        <div class="image" width="200px">
-          <center><p><img class="center" src="./resources/1691761142866.jpg" width="500px"></p></center>
+        <div class="image" width="850px">
+          <center><p><img class="center" src="./resources/matting.png" width="800px"></p></center>
         </div>
-        <div class="text" width="250px"> 
-          <p> ‘R: ’ refers to the number of real data used to train.
-          </p>
         </div>
       </div>
-      
-      <center><h2>Experiment-3: Semantic segmentation on Cityscapes</h2></center>
+      <center><h2>Experiment-3: Comparison with interactive matting models</h2></center>
       <div class="container">
         <div class="image" width="400px">
-          <center><p><img class="center" src="./resources/1691761292905.jpg" width="500px"></p></center>
+          <center><p><img class="center" src="./resources/interactive.png" width="500px"></p></center>
+          <p style="text-align:justify; text-justify:inter-ideograph;"><left>
+          In the
+penultimate row, our method is provided with guidance information for every image, reducing to an auxiliary input-based method.
+Our method outperforms automatic methods and some of the auxiliary input-based methods, and its performance is comparable to
+that of the trimap-based method, VitMatte.
+         </left></p>
         </div>
       </div>
 
-      <center><h2>Experiment-4: Human Pose Estimation on COCO val2017</h2></center>
-      <div class="container">
-        <div class="image" width="850px">
-          <center><p><img class="center" src="./resources/1691761382370.jpg" width="800px"></p></center>
-        </div>
-        </div>
-      </div>
-      
-      <center><h2>Experiment-5: Semantic segmentation on DeepFashion-MM</h2></center>
-      <div class="container">
-        <div class="image" width="850px">
-          <center><p><img class="center" src="./resources/1691761463051.jpg" width="800px"></p></center>
-        </div>
-        </div>
-      </div>
-      
-      <center><h2>Experiment-6: Depth Estimation on NYU Depth V2 val dataset</h2></center>
-      <div class="container">
-        <div class="image" width="850px">
-          <center><p><img class="center" src="./resources/1691761510546.jpg" width="800px"></p></center>
-        </div>
-        </div>
-      </div>
-      
-      <center><h2>Experiment-7: Zero-Shot Semantic Segmentation on PASCAL VOC 2012</h2></center>
-      <div class="container">
-        <div class="image" width="850px">
-          <center><p><img class="center" src="./resources/1691761556765.jpg" width="800px"></p></center>
-        </div>
-        </div>
-      </div>
-      
-      <center><h2>Experiment-8: Performance for Domain Generalization between different datasets.</h2></center>
-      <div class="container">
-        <div class="image" width="850px">
-          <center><p><img class="center" src="./resources/1691761606825.jpg" width="800px"></p></center>
-        </div>
-        </div>
-      </div>
       
       
       
       <center>
-          <img src="./resources/1691761637859.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+          <img src="./resources/quality.png" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
         </center>
         <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-            Examples of Human-Centric Generated Data for DatasetDM. Our method is capable
-            of generating high-accuracy, high-diversity, and unified perceptual annotations.
+           Qualitative results of different image matting methods.
         </left></p>
         <br>
         
         <center>
-            <img src="./resources/1691761737174.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+            <img src="./resources/more_quality.png" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
           </center>
           <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-              Examples of Generated Data for Urban City Scenario from DatasetDM.
+              Qualitative results of DiffusionMatte. The first column shows the reference input, while the remaining columns display target
+images and their predicted alpha mattes. Given a single reference input, our method can automatically process the same instance or category
+of foreground.
           </left></p>
           <br>
           
           <center>
-              <img src="./resources/1691761781948.jpg" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
+              <img src="./resources/video.png" alt="alt text" style="width: 100%; object-fit: cover; max-width:100%;"></a>
             </center>
             <p style="text-align:justify; text-justify:inter-ideograph;"><left>
-                Prompts of diffusion model from GPT-4. By providing some simple cues, GPT-4 can
-                generate a vast and diverse array of prompts.
+               The technique of in-context matting is easily extendable to
+video object matting. The key is to use a frame of the video
+as a reference.
             </left></p>
             <br>
             
